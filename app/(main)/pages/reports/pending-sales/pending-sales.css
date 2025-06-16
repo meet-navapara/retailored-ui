@@ -1,0 +1,444 @@
+.exact-order-card {
+  border: 1.5px solid #e5d3d3;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: none;
+  min-height: 140px;
+  font-family: 'Inter', Arial, sans-serif;
+  position: relative;
+}
+
+.exact-card-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.exact-avatar {
+  width: 40px;
+  height: 40px;
+  background: #e5d3d3;
+  color: #6b7bb8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  border: 1.5px solid #bcaea7;
+  flex-shrink: 0;
+}
+
+.exact-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exact-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exact-status {
+  color: #222;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.exact-order-no {
+  font-size: 14px;
+  color: #888;
+}
+
+.exact-product-row {
+  margin-top: 4px;
+}
+
+.exact-product {
+  font-weight: 500;
+  color: #3a3a3a;
+  font-size: 15px;
+}
+
+.exact-dates-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.exact-date {
+  font-size: 13px;
+  color: #555;
+}
+
+.exact-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+  position: absolute;
+  right: 16px;
+ top: 36px;
+}
+
+.exact-stitching-tag {
+  color: #070707;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 10px;
+}
+.card-action-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    pointer-events: auto;
+  }
+  
+  .card-action-btn {
+    background: #fff;
+    border: 1.5px solid #e5d3d3;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.98rem;
+    color: #b48a6e;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: background 0.2s, color 0.2s;
+  }
+  .card-action-btn:hover {
+    background: #f5ede3;
+    color: #8a6a4e;
+  }
+  .card-action-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    pointer-events: auto;
+  }
+  
+  .card-action-btn {
+    background: #fff;
+    border: 1.5px solid #e5d3d3;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.98rem;
+    color: #b48a6e;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: background 0.2s, color 0.2s;
+  }
+  .card-action-btn:hover {
+    background: #f5ede3;
+    color: #8a6a4e;
+  }
+.exact-status-tag {
+    background: #f5ede3;
+    color: #b48a6e;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1.5px solid #c8e6c9;
+}
+
+.exact-delivery-date {
+  font-size: 13px;
+  color: #555;
+  margin-top: 4px;
+}
+
+.modern-order-card {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(80, 80, 120, 0.08);
+  padding: 20px 24px;
+  background: #fff;
+  transition: box-shadow 0.2s;
+  position: relative;
+  overflow: visible;
+}
+.modern-order-card:hover {
+  box-shadow: 0 8px 32px rgba(80, 80, 120, 0.16);
+}
+
+.modern-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  position: relative;
+}
+
+.modern-avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #e5d3d3 60%, #f5ede3 100%);
+  color: #6b7bb8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.3rem;
+  border: 2px solid #f5ede3;
+  box-shadow: 0 2px 8px rgba(180, 138, 110, 0.07);
+  flex-shrink: 0;
+}
+
+.modern-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modern-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.modern-customer {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #2d2d2d;
+}
+
+.modern-order-no {
+  font-size: 0.98rem;
+  color: #b48a6e;
+  font-weight: 500;
+}
+
+.modern-product-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  color: #3a3a3a;
+}
+
+.modern-product-icon {
+  color: #6b7bb8;
+  font-size: 1.2rem;
+}
+
+.modern-product {
+  font-weight: 500;
+}
+
+.modern-dates-row {
+  display: flex;
+  gap: 18px;
+  font-size: 0.97rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.modern-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modern-tags-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.modern-stitching-tag {
+  background: #f5ede3 !important;
+  color: #b48a6e !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.97rem !important;
+  border: none !important;
+  padding: 4px 12px !important;
+}
+
+.modern-accepted-tag {
+  background: #e6f5e3 !important;
+  color: #4eb46e !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.97rem !important;
+  border: none !important;
+  padding: 4px 12px !important;
+}
+
+.modern-card-action-row {
+  position: absolute;
+  left: 50%;
+  bottom: -28px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 4px 16px rgba(80,80,120,0.10);
+  border-radius: 16px;
+  padding: 8px 18px;
+  z-index: 20;
+  align-items: center;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px);}
+  to { opacity: 1; transform: translateX(-50%) translateY(0);}
+}
+
+.modern-card-action-btn {
+  background: #f5ede3;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1.1rem;
+  color: #b48a6e;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(180, 138, 110, 0.07);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.modern-card-action-btn:hover, .modern-card-action-btn:active {
+  background: #e5d3d3;
+  color: #8a6a4e;
+}
+.close-btn {
+  background: transparent !important;
+  color: #b48a6e !important;
+  font-size: 1.3rem !important;
+  padding: 4px 8px !important;
+  box-shadow: none !important;
+}
+
+.card-action-row-modern {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  z-index: 10;
+  background: none;
+  pointer-events: none;
+}
+
+.card-action-btn-modern {
+  pointer-events: auto;
+  background: #fff;
+  border: 1.5px solid #e5d3d3;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b48a6e;
+  font-size: 1.35rem;
+  box-shadow: 0 2px 8px rgba(180, 138, 110, 0.07);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  outline: none;
+}
+.card-action-btn-modern:hover, .card-action-btn-modern:active {
+  background: #f5ede3;
+  color: #8a6a4e;
+  box-shadow: 0 4px 16px rgba(180, 138, 110, 0.13);
+}
+
+.card-opacity-wrapper {
+  transition: opacity 0.2s;
+}
+.card-opacity-wrapper.faded {
+  opacity: 0.5;
+}
+
+.card-action-row-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 28px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.card-action-btn-modern {
+  border: none;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(80,80,120,0.13);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
+  outline: none;
+}
+.card-action-btn-modern:active {
+  transform: scale(0.95);
+}
+
+/* Different colors for each button */
+.btn-blue {
+  background: #4a90e2;
+}
+.btn-blue:hover { background: #357abd; }
+
+.btn-green {
+  background: #27ae60;
+}
+.btn-green:hover { background: #1e8748; }
+
+.btn-orange {
+  background: #f5a623;
+}
+.btn-orange:hover { background: #d48806; }
+
+.btn-red {
+  background: #e74c3c;
+}
+.btn-red:hover {
+  background: #c0392b;
+}
+.bold-text {
+    font-weight: bold;
+  }
+  .date-label {
+    font-weight: bold;
+  }
+.status-pill-clickable:hover {
+  background: #e0cfc0;
+  box-shadow: 0 2px 8px rgba(180,138,110,0.13);
+}

@@ -15,6 +15,7 @@ import { useDebounce } from 'primereact/hooks';
 import { ReportsService } from '@/demo/service/reports.service';
 import { SalesOrderService } from '@/demo/service/sales-order.service';
 import FullPageLoader from '@/demo/components/FullPageLoader';
+import './pending-sales.css';
 
 interface JobOrderStatus {
   id: string;
@@ -37,6 +38,7 @@ interface PendingOrderItem {
   status: string;
   jobOrderStatus: JobOrderStatus[];
   last_jobId: string | null;
+  receivedDate?: string;
 }
 
 interface PendingOrdersResponse {
@@ -71,6 +73,8 @@ const PendingSalesReport = () => {
   const [itemToDelete, setItemToDelete] = useState<PendingOrderItem | null>(null);
   const observer = useRef<IntersectionObserver | null>(null);
   const lastOrderRef = useRef<HTMLDivElement>(null);
+  const [activeCard, setActiveCard] = useState<string | null>(null);
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const availableStatuses = [
     { id: 1, name: 'Pending' },
@@ -254,6 +258,16 @@ const PendingSalesReport = () => {
     router.push(`/pages/orders/sales-order?id=${orderId}&source=pending-sales`);
   };
 
+  const handleMouseEnter = (id: string) => setActiveCard(id);
+  const handleMouseLeave = () => setActiveCard(null);
+
+  const handleTouchStart = (id: string) => {
+    longPressTimeout.current = setTimeout(() => setActiveCard(id), 500);
+  };
+  const handleTouchEnd = () => {
+    if (longPressTimeout.current) clearTimeout(longPressTimeout.current);
+  };
+
   if (loading && !isFetchingMore && !debouncedSearchTerm) {
     return (
       <div className="flex flex-column p-3 lg:p-5" style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -336,85 +350,79 @@ const PendingSalesReport = () => {
       <div className="grid">
         {orders.length > 0 ? (
           orders.map((item, index) => (
-            <div 
-              key={`${item.order_id}-${item.id}`} 
+            <div
+              key={`${item.order_id}-${item.id}`}
               className="col-12 md:col-6 lg:col-4"
               ref={index === orders.length - 1 ? lastOrderRef : null}
+              onMouseEnter={() => handleMouseEnter(item.id)}
+              onMouseLeave={handleMouseLeave}
+              onTouchStart={() => handleTouchStart(item.id)}
+              onTouchEnd={handleTouchEnd}
+              style={{ position: 'relative' }}
             >
-              <Card className="h-full">
-                <div className="flex flex-column gap-2">
-                  <div className="flex justify-content-between align-items-center">
-                    <span className="font-bold">{item.customerName}</span>
-                    <Tag 
-                      value={item.status}
-                      severity={getStatusSeverity(item.status)} 
-                    />
-                  </div>
-                  
-                  <Divider className="my-2" />
-                  
-                  <div className="flex flex-column gap-1">
-                    <div className="flex justify-content-between">
-                      <span className="text-600">Product:</span>
-                      <span>{item.productName}</span>
+              <div className={`card-opacity-wrapper${activeCard === item.id ? ' faded' : ''}`}>
+                <Card className="exact-order-card">
+                  <div className="exact-card-row">
+                    <div className="exact-avatar">
+                      <span>
+                        {item.customerName
+                          ? item.customerName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+                          : ''}
+                      </span>
                     </div>
-                    <div className="flex justify-content-between">
-                      <span className="text-600">Reference:</span>
-                      <span>{item.productRef}</span>
+                    <div className="exact-main">
+                      <div className="exact-header-row">
+                        <span className="exact-status">{item.customerName}</span>
+                        <span className="exact-order-no">Order No: {item.order_id}</span>
+                      </div>
+                      <div className="exact-product-row">
+                        <span className="exact-product bold-text">{item.productName || "Kurta Pajama"}</span>
+                      </div>
+                      <div className="exact-dates-row">
+                        <span className="exact-date"><span className="date-label">Trial:</span> {item.deliveryDate || "11 Jun 2025"}</span>
+                        <span className="exact-date"><span className="date-label">Received:</span> {item.receivedDate || "12 Jun 2025"}</span>
+                        <span className="exact-delivery-date"><span className="date-label">Delivery:</span> {item.deliveryDate || "12 Jun 2025"}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-content-between">
-                      <span className="text-600">Delivery Date:</span>
-                      <span>{item.deliveryDate ? formatDate(item.deliveryDate) : 'Not scheduled'}</span>
-                    </div>
-                    <div className="flex justify-content-between">
-                      <span className="text-600">JO Status:</span>
-                     <Tag 
-                        value={item.jobOrderStatus.length > 0 
-                          ? item.jobOrderStatus[0].status_name
-                          : 'Pending'}
-                        severity={getStatusSeverity(item.jobOrderStatus.length > 0 
-                          ? item.jobOrderStatus[0].status_name 
-                          : 'Pending')}
-                      />
+                    <div className="exact-tags">
+                      <span className="exact-stitching-tag">Stitching</span>
+                      <span className="exact-status-tag">{item.status}</span>
                     </div>
                   </div>
-                  
-                  <Divider className="my-2" />
-                  
-                  <div className="flex flex-column gap-2 mt-3">
-                    <Button 
-                      label={item.jobOrderStatus.length > 0 ? 'View Job Order' : 'Create Job Order'}
-                      icon={item.jobOrderStatus.length > 0 ? 'pi pi-eye' : 'pi pi-plus'}
-                      onClick={() => handleCreateViewJO(item)}
-                      className={`w-full ${item.jobOrderStatus.length > 0 ? 'p-button-info' : 'p-button-warning'}`}
-                    />
-                    
-                    <Button
-                        label="Change Status"
-                        icon="pi pi-cog"
-                        onClick={() => openStatusChangeDialog(item)}
-                        className="w-full p-button-secondary"
-                    />
-                
-                    <div className="flex gap-2">
-                        <Button 
-                            label="View Sales Order"
-                            icon="pi pi-eye"
-                            onClick={() => viewSalesOrder(item.order_id)}
-                            className="w-full"
-                        />
-                        <Button 
-                            icon="pi pi-trash"
-                            onClick={() => confirmDelete(item)}
-                            className="p-button-danger"
-                            style={{ width: '20%' }}
-                            disabled={item.jobOrderStatus.length > 0 && 
-                              item.jobOrderStatus[item.jobOrderStatus.length - 1].status_name === 'Completed'}
-                        />
-                    </div>
-                  </div>
+                </Card>
+              </div>
+              {activeCard === item.id && (
+                <div className="card-action-row-center">
+                  <button
+                    className="card-action-btn-modern btn-blue"
+                    onClick={() => handleCreateViewJO(item)}
+                    title="Create Job Order"
+                  >
+                    <i className="pi pi-plus"></i>
+                  </button>
+                  <button
+                    className="card-action-btn-modern btn-green"
+                    onClick={() => openStatusChangeDialog(item)}
+                    title="Change Status"
+                  >
+                    <i className="pi pi-cog"></i>
+                  </button>
+                  <button
+                    className="card-action-btn-modern btn-orange"
+                    onClick={() => viewSalesOrder(item.order_id)}
+                    title="View Sales Order"
+                  >
+                    <i className="pi pi-eye"></i>
+                  </button>
+                  <button
+                    className="card-action-btn-modern btn-red"
+                    onClick={() => confirmDelete(item)}
+                    title="Delete"
+                  >
+                    <i className="pi pi-trash"></i>
+                  </button>
                 </div>
-              </Card>
+              )}
             </div>
           ))
         ) : (

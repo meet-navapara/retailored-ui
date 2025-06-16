@@ -22,6 +22,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { useDebounce } from 'use-debounce';
 import { Galleria } from 'primereact/galleria';
 import { Toast } from '@capacitor/toast';
+import './sales-order.css';
 
 interface Order {
   id: string;
@@ -43,6 +44,7 @@ interface Order {
     id: string;
     fname: string;
     admsite_code: number;
+    phone: string;
   }
   orderStatus: {
     id: string;
@@ -145,6 +147,9 @@ const SalesOrder = () => {
   const source = searchParams.get('source');
   const observer = useRef<IntersectionObserver | null>(null);
   const lastOrderRef = useRef<HTMLDivElement>(null);
+  const [viewItemDialogVisible, setViewItemDialogVisible] = useState(false);
+  const [viewItem, setViewItem] = useState<Order['orderDetails'][0] | null>(null);
+  const [statusDialogVisible, setStatusDialogVisible] = useState(false);
 
   const availableStatuses = [
     { id: '1', name: 'Pending' },
@@ -466,24 +471,57 @@ const SalesOrder = () => {
         status_id: statusId,
       });
 
+      // Find the new status name
       const newStatus = availableStatuses.find(s => parseInt(s.id) === statusId)?.name;
+
+      // Update viewItem immediately
+      setViewItem(prev =>
+        prev
+          ? {
+              ...prev,
+              orderStatus: prev.orderStatus
+                ? { ...prev.orderStatus, status_name: newStatus || prev.orderStatus.status_name || '', id: prev.orderStatus.id }
+                : { id: '', status_name: newStatus || '' },
+            }
+          : prev
+      );
+
+      // Optionally update selectedOrder.orderDetails as well for consistency
+      setSelectedOrder(prevOrder =>
+        prevOrder
+          ? {
+              ...prevOrder,
+              orderDetails: prevOrder.orderDetails.map(od =>
+                od.id === selectedDetail.id
+                  ? {
+                      ...od,
+                      orderStatus: od.orderStatus
+                        ? { ...od.orderStatus, status_name: newStatus || od.orderStatus.status_name || '', id: od.orderStatus.id }
+                        : { id: '', status_name: newStatus || '' },
+                    }
+                  : od
+              ),
+            }
+          : prevOrder
+      );
 
       await Toast.show({
         text: `Item status updated to ${newStatus || 'selected status'}`,
         duration: 'short',
-        position: 'bottom'
+        position: 'bottom',
       });
 
+      // Still fetch from server to ensure data is in sync
       await Promise.all([
         fetchOrderDetails(selectedOrder.id),
-        fetchOrders(pagination.currentPage, pagination.perPage)
+        fetchOrders(pagination.currentPage, pagination.perPage),
       ]);
     } catch (err: any) {
       const errorMessage = err?.message || 'Failed to update item status';
       await Toast.show({
         text: errorMessage,
         duration: 'short',
-        position: 'bottom'
+        position: 'bottom',
       });
       console.error('Error:', err);
     } finally {
@@ -689,6 +727,21 @@ const SalesOrder = () => {
     }
   };
 
+  const getStatusStyles = (status: string) => {
+    switch (status) {
+      case 'Completed':
+        return { background: '#e6f5e3', color: '#27ae60' }; // green
+      case 'In Progress':
+        return { background: '#e3f0f5', color: '#1976d2' }; // blue
+      case 'Pending':
+        return { background: '#f5ede3', color: '#b48a6e' }; // brown
+      case 'Cancelled':
+        return { background: '#fbeaea', color: '#e74c3c' }; // red
+      default:
+        return { background: '#e5d3d3', color: '#8a6a4e' }; // default brown
+    }
+  };
+
   if (loading && !isFetchingMore && !debouncedSearchTerm) {
     return (
       <div className="flex flex-column p-3 lg:p-5" style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -861,199 +914,254 @@ const SalesOrder = () => {
         </div>
       )}
 
-      <Dialog 
-        header={`Order Details - ${selectedOrder?.docno}`} 
-        visible={visible} 
+      <Dialog
+        header={
+          viewItem ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+              minHeight: 10 // match Dialog header height
+            }}>
+              <Button
+                icon="pi pi-arrow-left"
+                className="p-button-text"
+                onClick={() => setViewItem(null)}
+                style={{
+                  marginLeft: -15,
+                  marginRight: 10,
+                  color: '#6c63ff',
+                  fontSize: '1.1rem',
+                  marginTop: 0,
+                  padding: 0,
+                  minWidth: 32,
+                  minHeight: 32
+                }}
+              />
+           
+              <span onClick={() => setViewItem(null)} style={{ fontWeight: 700, color: '#222', fontSize: '1.15rem' }}>
+              Order Items
+            </span>
+            </div>
+          ) : (
+            `Order Details - ${selectedOrder?.docno}`
+          )
+        }
+        visible={visible}
         onHide={handleDialogClose}
         maximized={isMaximized}
         onMaximize={(e) => setIsMaximized(e.maximized)}
         className={isMaximized ? 'maximized-dialog' : ''}
         blockScroll
       >
-        {listLoading ? (
-          <div className="p-fluid mt-3">
-            <div className="mb-4">
-              <Skeleton width="100%" height="10rem" borderRadius="6px" className="mb-5" />
-              <Skeleton width="100%" height="2.5rem" borderRadius="6px" className="mb-5" />
-              <Skeleton width="100%" height="20rem" className="mb-1" />
-            </div>
-
-            <div className="grid">
-              <div className="col-12 md:col-4 mb-2">
-                <Skeleton width="100%" height="2.5rem" borderRadius="6px" />
+        {viewItem ? (
+          <div className="order-item-details-page" style={{ maxWidth: 420, margin: '0 auto', paddingTop: 0 }}>
+           
+            <div style={{ color: '#888', marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span>Order Number</span>
+                <span style={{ color: '#222', fontWeight: 600 }}>{selectedOrder?.id || '-'}</span>
               </div>
-              <div className="col-12 md:col-4 mb-2">
-                <Skeleton width="100%" height="2.5rem" borderRadius="6px" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span>Delivery date</span>
+                <span style={{ color: '#222', fontWeight: 600 }}>
+                  {viewItem.delivery_date
+                    ? `${new Date(viewItem.delivery_date).toLocaleDateString('en-GB')} | ${new Date(viewItem.delivery_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : '-'}
+                </span>
               </div>
-              <div className="col-12 md:col-4 mb-2">
-                <Skeleton width="100%" height="2.5rem" borderRadius="6px" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span>Trial date</span>
+                <span style={{ color: '#222', fontWeight: 600 }}>
+                  {viewItem.trial_date
+                    ? `${new Date(viewItem.trial_date).toLocaleDateString('en-GB')} | ${new Date(viewItem.trial_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : '-'}
+                </span>
               </div>
-            </div>
-          </div>
-        ) : selectedOrder ? (
-          <div className="p-fluid mt-3">
-            <div className="grid">
-              <div className="col-6">
-                <div className="field">
-                  <label>Customer</label>
-                  <p className="m-0 font-medium">{selectedOrder?.user?.fname}</p>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span>Type</span>
+                <span style={{ color: '#222', fontWeight: 600 }}>{viewItem.material?.name || '-'}</span>
               </div>
-              <div className="col-6">
-                <div className="field">
-                  <label>Order Date</label>
-                  <p className="m-0 font-medium">{formatDate(new Date(selectedOrder.order_date))}</p>
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="field">
-                  <label>Status</label>&nbsp;
-                  <Tag 
-                    value={selectedOrder.orderStatus?.status_name || 'Unknown'}
-                    severity={getStatusSeverity(selectedOrder.orderStatus?.status_name) || undefined}
-                    className="text-sm font-semibold"
-                    style={{ minWidth: '6rem', textAlign: 'center' }}
-                  />
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="field">
-                  <label>Trial Date</label>
-                  <p className="m-0 font-medium">{selectedOrder.orderDetails?.some(item => item.trial_date) 
-                    ? formatDate(new Date(selectedOrder.orderDetails.find(item => item.trial_date)?.trial_date || '')) 
-                    : 'Not scheduled'}</p>
-                </div>
-              </div>
-              <div className="col-12">
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    label="Receive Payment"
-                    icon="pi pi-wallet"
-                    onClick={handlePaymentClick}
-                    disabled={selectedOrder?.amt_due === 0 || selectedOrder?.amt_due === undefined}
-                  />
-                  <Button
-                    icon={loadingPaymentHistory ? 'pi pi-spin pi-spinner' : 'pi pi-history'}
-                    style={{ width: '20%' }}
-                    onClick={handleViewPaymentHistory}
-                    className="p-button-secondary"
-                    disabled={loadingPaymentHistory}
-                  />
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span>Item Status</span>
+                <span
+                   onClick={() =>{ setSelectedDetail(viewItem),setStatusSidebarVisible(true)}}
+                  style={{
+                    marginLeft: 12,
+                    borderRadius: 8,
+                    padding: '4px 16px',
+                    fontWeight: 600,
+                    fontSize: '0.98rem',
+                    cursor: 'pointer',
+                    ...getStatusStyles(viewItem.orderStatus?.status_name || 'Accepted')
+                  }}
+                >
+                  {viewItem.orderStatus?.status_name || 'Accepted'}
+                </span>
               </div>
             </div>
-
-            <Divider />
-            
-            <h5 className="m-0 mb-3">Order Items</h5>
-
-            {selectedOrder.orderDetails?.map((item) => (
-              <div key={item.id} className="mb-4 surface-50 p-3 border-round">
-                <div className="grid">
-                  <div className="col-6">
-                    <div className="field">
-                      <label>Item Ref</label>
-                      <p className="m-0 font-medium">{item.item_ref || 'Not Available'}</p>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="field">
-                      <label>Job Order No</label>
-                      <p className="m-0 font-medium">{item.order_id}</p>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="field">
-                      <label>Item Name</label>
-                      <p className="m-0 font-medium">{item.material?.name || 'Not Available'}</p>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="field">
-                      <label>Jobber Name</label>
-                      <p className="m-0 font-medium">{item.jobOrderDetails?.[0]?.adminSite?.sitename || 'Not assigned'}</p>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="field">
-                      <label>Trial Date</label>
-                      <p className="m-0 font-medium">
-                        {item.trial_date ? formatDate(new Date(item.trial_date)) : 'Not scheduled'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="field">
-                      <label>Amount</label>
-                      <p className="m-0 font-medium">₹ {item.item_amt || 0}</p>
-                    </div>
-                  </div>
-                  <div className="col-12 mt-2">
-                    <div className="grid align-items-start">
-                      <div className="col-9">
-                        <div className="field">
-                          <label>Notes</label>
-                          <p className="m-0 font-medium">{item.desc1 || 'No Notes Available'}</p>
-                        </div>
-                      </div>
-                      <div className="col-3 flex justify-content-end pt-4">
-                        <Button 
-                          icon="pi pi-pencil" 
-                          onClick={() => handleEditOrderDetail(item)}
-                          className="p-button-rounded p-button"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-12 mt-2">
-                    <Button
-                      label={`Status (${item.orderStatus?.status_name || 'Unknown'})`}
-                      icon="pi pi-sync"
-                      onClick={() => {
-                        setSelectedDetail(item);
-                        setStatusSidebarVisible(true);
-                      }}
-                      severity={getStatusSeverity(item.orderStatus?.status_name) || undefined}
-                    />
-                  </div>
-
-                  {item?.image_url && item.image_url.length > 0 && (
-                    <div className="col-12 mt-2">
-                      <Button 
-                        label={`View Images (${item.image_url.length})`} 
-                        icon="pi pi-image" 
-                        className="p-button-outlined"
-                        onClick={() => handleImagePreview(item.image_url)}
-                      />
-                    </div>
-                  )}
-
-                  <div className="col-12 mt-2">
-                    <Button 
-                      label="View Measurement Details" 
-                      icon="pi pi-eye" 
-                      className="p-button-outlined"
-                      onClick={() => handleViewMeasurement(item)}
-                    />
-                  </div>
-
-                  <div className="col-12 mt-2">
-                    <Button 
-                      label="Update Status"
-                      icon="pi pi-pencil" 
-                      onClick={() => openItemActionSidebar(item)}
-                      className="w-full"
-                    />
-                  </div>
-                  <Divider />
+            {viewItem.desc1 && (viewItem.desc1 || '').split(',').map((part, idx) => {
+              console.log('viewItem :>> ', viewItem.desc1);
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    background: '#e5e5e5',
+                    borderRadius: 8,
+                    padding: '8px 14px',
+                    fontWeight: 600,
+                    color: '#444',
+                    marginBottom: 10,
+                    fontSize: '1.02rem'
+                  }}
+                >
+                  {part.trim()}
                 </div>
+              )
+            })}
+            <div
+              style={{
+                background: '#f5f5f5',
+                borderRadius: 12,
+                padding: '16px 18px',
+                marginTop: 50,
+                boxShadow: '0 1px 4px rgba(80,80,120,0.04)'
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '1.08rem', marginBottom: 10 }}>Price Breakup</div>
+              <div style={{ borderTop: '1px dashed #bbb', margin: '8px 0' }}></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span>Stitching Cost</span>
+                <span>1 X {viewItem.item_amt || 0}</span>
               </div>
-            ))}
+              <div style={{ borderTop: '1px dashed #bbb', margin: '8px 0' }}></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700 }}>
+                <span>Total:</span>
+                <span>₹{viewItem.item_amt || 0}</span>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="flex justify-content-center align-items-center" style={{ height: '200px' }}>
-            <p>No order details available</p>
+          <div style={{ position: 'relative', minHeight: '60vh', paddingBottom: '70px' }}>
+            <div className="p-fluid mt-3">
+              <div className="info-table">
+                <div className="info-row">
+                  <span className="info-label">Name</span>
+                  <span
+                    className="info-value font-medium"
+                    style={{ color: '#1976d2', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {selectedOrder?.user?.fname || '-'}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Phone Number</span>
+                  <span className="info-value font-medium" style={{ color: '#222' }}>
+                    {selectedOrder?.user?.phone || '-'}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Order Number</span>
+                  <span
+                    className="info-value font-medium"
+                    style={{
+                      color: '#1976d2',
+                      textDecoration: 'underline',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                   
+                    <i className="pi pi-link" style={{ fontSize: '1em', verticalAlign: 'middle' }}></i>  {selectedOrder?.id || '-'}{' '}
+                  </span>
+                </div>
+              </div>
+
+              <Divider />
+              
+              <h5 className="m-0 mb-3">Order Items</h5>
+
+              {selectedOrder?.orderDetails?.map((item) => (
+                <div
+                  key={item.id}
+                  className="order-item-row border-round mb-3"
+                  style={{
+                    border: '1.5px solid #e0e0e0',
+                    padding: '16px 22px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#fff',
+                    minHeight: '54px',
+                    boxShadow: '0 1px 4px rgba(80,80,120,0.04)'
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#1976d2',
+                      fontWeight: 600,
+                      fontSize: '1.08rem',
+                      letterSpacing: '0.01em'
+                    }}
+                  >
+                    #{item.material?.name || 'Not Available'}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="pi pi-print" style={{ color: '#90a4ae', fontSize: '1.25em' }} />
+                    <span
+                      className="order-item-view-link"
+                      style={{
+                        color: '#1976d2',
+                        fontWeight: 600,
+                        fontSize: '1.08rem',
+                        textDecoration: 'underline',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setViewItem(item)}
+                    >
+                      View
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Fixed bottom button */}
+            <div
+              style={{
+                position: 'fixed',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                background: '#1976d2',
+                zIndex: 1001,
+                boxShadow: '0 -2px 12px rgba(0,0,0,0.07)',
+                padding: 0,
+                margin: 0,
+              }}
+            >
+              <Button
+                label="Receive Payment"
+                onClick={handlePaymentClick}
+                disabled={selectedOrder?.amt_due === 0 || selectedOrder?.amt_due === undefined}
+                className="p-button"
+                style={{
+                  width: '100%',
+                  background: '#1976d2',
+                  border: 'none',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '1.12rem',
+                  borderRadius: 0,
+                  padding: '1.2rem 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              />
+            </div>
           </div>
         )}
       </Dialog>
